@@ -1,31 +1,29 @@
-function [lowxie lower median upper upxie] = bsrank(cescore, bsscore,range);
-%[lower median upper] = bsrank(score,range,bw,f);
+function [lowxie low mid high highxie] = bsrank(cescore, bsscore,range);
+%[lowxie lower rank upper upxie] = bsrank(score,range,bw,f);
 %
-%score is an nxm matrix of scores of n units for m bootstraps
+%cescore is an n by 1 vector of scores
+%bsscore is an n by m matrix of scores of n units for m bootstraps
 %range is the size of the confidence interval, in percentages
-%bw is the bandwidth
-%corr is an optional parameter
 %
-%median returns the median rank
-%lower and upper return the bounds of the confidence interval specified by
-%range
+%mid returns the rank of score
 %
-%if bw = 0, the confidential interval of the rank is based on Goldstein and Spiegelhalter (1996
-%JRSS-A) https://rss.onlinelibrary.wiley.com/doi/10.2307/2983325
+%low and high return the bootstrap bounds of the confidence interval,
+%following Goldstein and Spiegelhalter (1996 JRSS-A)
+%https://rss.onlinelibrary.wiley.com/doi/10.2307/2983325
 %
-%if bw > 0, the confidential interval is corrected for ties following Xie,
-%Singh and Zhang (2012 JASA)
-%https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.0142 where the
-%bandwidth equals bw times the bootstrap standard deviation of the ranked
-%object
+%lowxie and highxie return the bootstrap bounds corrected for near-ties,
+%following Xie, Singh and Zhang (2012 JASA)
+%https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.0142
+%
+%Richard S.J. Tol, 20 May 2022
 
 if range > 100 | range < 0
     disp('confidence interval set to 95%')
     range = 95;
 end
 
-high = 100-(100-range)/2;
-low = (100-range)/2;
+up = 100-(100-range)/2;
+down = (100-range)/2;
 
 iqr = prctile(cescore,75)-prctile(cescore,25);
 
@@ -42,14 +40,16 @@ xie = xie - diag(diag(xie));
 xie(xie>1) = 1;
 xie = sum(xie)';
     
-median = prctile(rbs,50,2);
-lower = prctile(rbs,low,2);
-lowxie = floor(lower - 0.5*xie);
-upper = prctile(rbs,high,2);
-upxie = ceil(upper + 0.5*xie);
+mid = rank(cescore);
+low = prctile(rbs,down,2);
+lowsm = prctile(rbsx,down,2);
+lowxie = floor(lowsm - 0.5*xie);
+high = prctile(rbs,up,2);
+highsm = prctile(rbsx,up,2);
+highxie = ceil(highsm + 0.5*xie);
 
 n = length(cescore);
 lowxie(lowxie<1) = 1;
-upxie(upxie>n) = n;
+highxie(highxie>n) = n;
 
 end

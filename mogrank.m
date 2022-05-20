@@ -1,20 +1,23 @@
-function [c median lower upper] = mogrank(cescore, bsscore, range, corr)
-%[c rank lower upper] = mogrank(cescore, bsscore)
+function [low mid high] = mogrank(cescore, bsscore, range, corr)
+%[low mide high] = mogrank(cescore, bsscore)
 %
-%cescore is an nxm matrix of scores of n units for m bootstraps
-%bsscore is the nx1 vector of actual scores
+%cescore is an n by m matrix of scores of n units for m bootstraps
+%bsscore is the n by vector of actual scores
 %range is the size of the confidence interval, in percentages
 %
-%median returns the median rank
-%lower and upper return the bounds of the confidence interval specified by
+%mid returns the rank
+%low and high return the bounds of the confidence interval specified by
 %range
 %
-%the confidential interval of the rank is based on Mogstad, Romano, Shaikh and Wilhelm (2022
-%AEA P&P)
+%the confidential interval of the rank is based on Mogstad, Romano,
+%Shaikh and Wilhelm (2022 AEA P&P)
 %
-%if corr = true, the original procedure is followed
-%if corr = false, the standard deviation of the difference is corrected for
+%if corr = false, the original procedure is followed
+%if corr = true, the standard deviation of the difference is corrected for
 %correlation
+%
+%Richard S.J. Tol, 20 May 2022
+
 
 nobj = size(bsscore,1);
 nbs = size(bsscore,2);
@@ -41,9 +44,9 @@ end
 
 c = prctile(cmat',range)';
 
-median = 1 + sum(mcediff > 0,2);
-lower = 1 + sum(mcediff - sd.*repmat(c,[1 nobj]) > 0,2);
-upper = sum(mcediff + sd.*repmat(c,[1 nobj]) > 0,2);
+mid = rank(cescore);
+low = 1 + sum(mcediff - sd.*repmat(c,[1 nobj]) > 0,2);
+high = sum(mcediff + sd.*repmat(c,[1 nobj]) > 0,2);
 
 end
 
